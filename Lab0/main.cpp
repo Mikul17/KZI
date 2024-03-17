@@ -1,8 +1,7 @@
-    #include <iostream>
-    #include <fstream>
-    #include <vector>
+#include <iostream>
+#include <fstream>
+#include <vector>
 #include <algorithm>
-#include <limits>
 #include <chrono>
 
     using namespace std;
@@ -46,25 +45,11 @@
         }
     }
 
-    int algorytm123(vector<Obiekt> obiekty){
-        int t=0, Cmax=0;
-        for(auto & i : obiekty){
-            t = max(t,i.r)+i.p;
-            Cmax=max(Cmax, t+i.q);
+    void wyswietlKolejnosc(vector<Obiekt> obiekty){
+        for(int i=0; i<obiekty.size();i++){
+            cout<<obiekty[i].id<<" ";
         }
-        //cout<<"t: "<<t<<" | Cmax: "<<Cmax<<endl;
-        return Cmax;
-    }
-
-    int odwrotnyAlgorytm123(vector<Obiekt> obiekty){
-        int t=0,Cmax=0;
-
-        for(int i=obiekty.size()-1; i>=0; i--){
-            t=max(t,obiekty.at(i).r)+obiekty.at(i).p;
-            Cmax=max(Cmax, t+obiekty.at(i).q);
-        }
-        cout<<"t: "<<t<<" | Cmax: "<<Cmax<<endl;
-        return Cmax;
+        cout<<endl;
     }
 
     int obliczDlaWycinka(vector<Obiekt> obiekty, int indeksy[], int& size){
@@ -75,6 +60,16 @@
             Cmax = max(Cmax, t+obiekty[indeksy[k]].q);
         }
         cout<<"t: "<<t<<" | Cmax: "<<Cmax<<endl;
+        return Cmax;
+    }
+
+    int obliczCmax(vector<Obiekt> obiekty){
+        int t=0, Cmax=0;
+
+        for(int k=0; k<obiekty.size(); k++){
+            t = max(t, obiekty.at(k).r)+obiekty.at(k).p;
+            Cmax = max(Cmax, t+obiekty[k].q);
+        }
         return Cmax;
     }
 
@@ -95,108 +90,124 @@
         obliczDlaWycinka(obiekty,indeksy,size);
     }
 
-    bool operator==(const Obiekt& lhs, const Obiekt& rhs) {
-        return lhs.r == rhs.r && lhs.p == rhs.p && lhs.q == rhs.q && lhs.id == rhs.id;
+    bool operator==(const Obiekt& a, const Obiekt& b) {
+        return a.r == b.r && a.p == b.p && a.q == b.q && a.id == b.id;
     }
-    bool operator==(const vector<Obiekt>& lhs, const vector<Obiekt>& rhs) {
-        if (lhs.size() != rhs.size()) return false;
-        for (size_t i = 0; i < lhs.size(); ++i) {
-            if (!(lhs[i] == rhs[i])) return false;
+    bool operator==(const vector<Obiekt>& a, const vector<Obiekt>& b) {
+        if (a.size() != b.size()) return false;
+        for (size_t i = 0; i < a.size(); ++i) {
+            if (!(a[i] == b[i])) return false;
         }
         return true;
     }
 
-    vector<Obiekt> tabuSearch(vector<Obiekt>& tasks) {
-        const int tabuListSize = 5;
-        const int maxIterations = 5;
-        // Initial solution (could be improved)
+    void zamien(Obiekt& a, Obiekt& b){
+        Obiekt tmp = a;
+        a = b;
+        b = tmp;
+    }
 
-        vector<Obiekt> currentSolution = tasks; // This could be a sorted list as per your existing methods
-        sort(currentSolution.begin(), currentSolution.end(), [](const Obiekt& a, const Obiekt& b) {
-            return a.r < b.r;
-        });
-        vector<Obiekt> bestSolution = currentSolution;
-        int bestCmax = algorytm123(currentSolution); // Assuming algorytm123 calculates the Cmax for the given sequence
+    /**
+     * Funckcja implementująca ograniczony algorytm bruteforce
+     * Algorytm ten przechodzi w pętli przez wszystkie możliwe kombinacje zadan
+     * i porównuje wyniki z najlepszym dotychczasowym wynikiem
+     *
+     * Na początku sortuje zdania po czasie przygotowywania - r, żeby zminimalizować czas wykonywania algorytmu
+     * Algorytm jest ograniczony do maksymalnej ilości iteracji jakie może wykonać
+     * Dodatkowo dla każdej iteracji tworzona jest tablica poobienstwa, która przechowuje wszystkie
+     * możliwe kombinacje zadań, po to by nie powtarzać tych samych kombinacji
+     *
+     * @param obiekty - tablica wszystkich zadań
+     * @param maxIteracji - maksymalna liczba iteracji jakie może wykonać algorytm
+     * @param rozmiarTablicyPoobienstwa - rozmiar tablicy poobienstwa
+     * @return
+     */
+        vector<Obiekt> tabuSearch(vector<Obiekt>& obiekty, int maxIteracji, int rozmiarTablicyPoobienstwa){
+            vector<Obiekt> tab = obiekty;
 
-        // Initialize Tabu List
-        vector<vector<Obiekt>> tabuList;
+            sort(tab.begin(), tab.end(), [](const Obiekt& a, const Obiekt& b) {
+                return a.r < b.r;
+            });
 
-        for (int iteration = 0; iteration < maxIterations; ++iteration) {
-            vector<Obiekt> bestCandidate;
-            int bestCandidateCmax = std::numeric_limits<int>::max();
+            vector<Obiekt> najlepszeRozwiazanie = tab;
+            int Cmax = obliczCmax(tab);
 
-            // Explore Neighborhood
-            for (int i = 0; i < currentSolution.size(); ++i) {
-                for (int j = i + 1; j < currentSolution.size(); ++j) {
-                    // Generate a neighbor solution by swapping two tasks
-                    vector<Obiekt> candidateSolution = currentSolution;
-                    std::swap(candidateSolution[i], candidateSolution[j]);
+            vector<vector<Obiekt>> tablicaPodobienstwa;
 
-                    if (std::find(tabuList.begin(), tabuList.end(), candidateSolution) == tabuList.end()) { // Not in Tabu List
-                        int candidateCmax = algorytm123(candidateSolution);
-                        if (candidateCmax < bestCandidateCmax) {
-                            bestCandidate = candidateSolution;
-                            bestCandidateCmax = candidateCmax;
+            for(int i=0; i< maxIteracji; i++) {
+                vector<Obiekt> najlepszaKolejnosc;
+                int najlepszyCmax = INT_MAX;
+
+                for(int i = 0; i < tab.size(); i++){
+                    for(int j=i+1; j < tab.size(); j++){
+                        vector<Obiekt> aktualnaKolejnosc = tab;
+                        zamien(aktualnaKolejnosc[i], aktualnaKolejnosc[j]);
+
+                        bool istnieje = false;
+                        for(auto& tablica : tablicaPodobienstwa){
+                            if(tablica == aktualnaKolejnosc){
+                                istnieje = true;
+                                break;
+                            }
+                        }
+
+                        if(!istnieje){
+                            int aktualnyCmax = obliczCmax(aktualnaKolejnosc);
+                            if(aktualnyCmax < najlepszyCmax){
+                                najlepszaKolejnosc = aktualnaKolejnosc;
+                                najlepszyCmax = aktualnyCmax;
+                            }
                         }
                     }
                 }
+
+                tab = najlepszaKolejnosc;
+                if(najlepszyCmax < Cmax){
+                    najlepszeRozwiazanie = najlepszaKolejnosc;
+                    Cmax = najlepszyCmax;
+                }
+
+                tablicaPodobienstwa.push_back(najlepszaKolejnosc);
+                if(tablicaPodobienstwa.size() > rozmiarTablicyPoobienstwa){
+                    tablicaPodobienstwa.erase(tablicaPodobienstwa.begin());
+                }
             }
-
-            // Update current solution and Tabu List
-            currentSolution = bestCandidate;
-            if (bestCandidateCmax < bestCmax) {
-                bestSolution = bestCandidate;
-                bestCmax = bestCandidateCmax;
-            }
-
-            tabuList.push_back(bestCandidate);
-            if (tabuList.size() > tabuListSize) tabuList.erase(tabuList.begin());
-
-            // Additional stopping criteria can be added here
+            return najlepszeRozwiazanie;
         }
-
-        return bestSolution;
-    }
-
-
 
 
     int main() {
-        //vector<Obiekt> dane = wczytajDane("data.1");
-        //wyswietlDane(dane);
-        //algorytm123(dane);
-        //int wycinek[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
-        //int size = sizeof(wycinek)/sizeof(int);
-        //obliczDlaWycinka(dane,wycinek,size);
-        //sortR(dane);
-        //sortRQratio(dane);
-        //sortQ(dane);
-        //wyswietlDane(tabuSearch(dane));
-        int totalCmax = 0;
-        auto start = chrono::high_resolution_clock::now();
+        int Cmax = 0;
+        chrono::milliseconds czas(0);
+
         vector<string> nazwyPlikow = {"data.1", "data.2", "data.3", "data.4"};
 
-        for (auto &nazwaPliku : nazwyPlikow) {
-            cout << "Przetwarzanie " << nazwaPliku << endl;
+        for(int i=1; i<5; i++){
+            string nazwaPliku = "data."+to_string(i);
+            cout << "========= Przetwarzanie danych:  " << nazwaPliku <<" =========" << endl;
 
-            // Wczytanie danych z aktualnego pliku
             vector<Obiekt> dane = wczytajDane(nazwaPliku);
 
-            // Wyświetlenie wczytanych danych
-            wyswietlDane(dane);
+            auto start = chrono::high_resolution_clock::now();
 
-            // Wykonanie algorytmu tabu search na wczytanych danych
-            vector<Obiekt> wynik = tabuSearch(dane);
+            vector<Obiekt> wynik = tabuSearch(dane,50,30);
 
-            // Wyświetlenie wyniku algorytmu tabu search
-            cout << "Wynik algorytmu tabu search dla " << nazwaPliku << ":" << endl;
-            wyswietlDane(wynik);
-            totalCmax += algorytm123(wynik);
+            auto stop = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+            czas += duration;
+
+
+            int tmp = obliczCmax(wynik);
+            Cmax += tmp;
+            cout << "Cmax: " << tmp << endl;
+            cout<< "Kolejnosc: ";
+            wyswietlKolejnosc(wynik);
+            cout << endl << "Czas wykonania: " << duration.count()  << " milisekund" << endl;
+
         }
-        auto stop = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
-        cout << "Czas wykonania: " << duration.count() << " milisekund" << endl;
-        cout<<"Total Cmax: "<<totalCmax<<endl;
+        cout<< "=====================================" << endl;
+        cout << "Laczny czas wykonania: " << czas.count()  << " milisekund" << endl;
+        cout<<"Laczne Cmax: "<<Cmax<<endl;
 
 
         return 0;
