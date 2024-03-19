@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
+#include <climits>
 
     using namespace std;
 
@@ -19,6 +20,7 @@
         vector<Obiekt> obiekty;
         //ifstream f ("/Users/miql/Desktop/Cpp/Lab0/rpq.data.txt");
         ifstream f ("C:\\Users\\miql\\Desktop\\KZI\\Lab0\\rpq.data.txt");
+        //ifstream f ("rpq.data.txt");
         string tmp;
         int n=0;
 
@@ -107,22 +109,7 @@
         b = tmp;
     }
 
-    /**
-     * Funckcja implementująca ograniczony algorytm bruteforce
-     * Algorytm ten przechodzi w pętli przez wszystkie możliwe kombinacje zadan
-     * i porównuje wyniki z najlepszym dotychczasowym wynikiem
-     *
-     * Na początku sortuje zdania po czasie przygotowywania - r, żeby zminimalizować czas wykonywania algorytmu
-     * Algorytm jest ograniczony do maksymalnej ilości iteracji jakie może wykonać
-     * Dodatkowo dla każdej iteracji tworzona jest tablica poobienstwa, która przechowuje wszystkie
-     * możliwe kombinacje zadań, po to by nie powtarzać tych samych kombinacji
-     *
-     * @param obiekty - tablica wszystkich zadań
-     * @param maxIteracji - maksymalna liczba iteracji jakie może wykonać algorytm
-     * @param rozmiarTablicyPoobienstwa - rozmiar tablicy poobienstwa
-     * @return
-     */
-        vector<Obiekt> tabuSearch(vector<Obiekt>& obiekty, int maxIteracji, int rozmiarTablicyPoobienstwa){
+    vector<Obiekt> tabuSearch(vector<Obiekt>& obiekty, int maxIteracji, int rozmiarTablicyPodobienstwa){
             vector<Obiekt> tab = obiekty;
 
             sort(tab.begin(), tab.end(), [](const Obiekt& a, const Obiekt& b) {
@@ -168,10 +155,11 @@
                 }
 
                 tablicaPodobienstwa.push_back(najlepszaKolejnosc);
-                if(tablicaPodobienstwa.size() > rozmiarTablicyPoobienstwa){
+                if(tablicaPodobienstwa.size() > rozmiarTablicyPodobienstwa){
                     tablicaPodobienstwa.erase(tablicaPodobienstwa.begin());
                 }
             }
+
             return najlepszeRozwiazanie;
         }
 
@@ -208,7 +196,6 @@
         cout<< "=====================================" << endl;
         cout << "Laczny czas wykonania: " << czas.count()  << " milisekund" << endl;
         cout<<"Laczne Cmax: "<<Cmax<<endl;
-
 
         return 0;
     }
