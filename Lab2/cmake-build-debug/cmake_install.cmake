@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/miql/Desktop/Lab2
+# Install script for directory: D:/Studia/ISA/SEMESTR 6/KZI/Lab2
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/miql/Desktop/Lab2/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "D:/Studia/ISA/SEMESTR 6/KZI/Lab2/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

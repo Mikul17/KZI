@@ -1,3 +1,3 @@
-C:/Users/miql/Desktop/Lab2/cmake-build-debug/CMakeFiles/Lab2.dir
-C:/Users/miql/Desktop/Lab2/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/miql/Desktop/Lab2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+D:/Studia/ISA/SEMESTR 6/KZI/Lab2/cmake-build-debug/CMakeFiles/Lab2.dir
+D:/Studia/ISA/SEMESTR 6/KZI/Lab2/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/Studia/ISA/SEMESTR 6/KZI/Lab2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

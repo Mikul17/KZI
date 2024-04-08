@@ -1,4 +1,13 @@
-C:\Users\miql\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/miql/AppData/Local/Programs/CLion/bin/ninja/win/x64/ninja.exe -G Ninja -S C:\Users\miql\Desktop\Lab2 -B C:\Users\miql\Desktop\Lab2\cmake-build-debug
+C:\Users\miql\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" -S "D:\Studia\ISA\SEMESTR 6\KZI\Lab2" -B "D:\Studia\ISA\SEMESTR 6\KZI\Lab2\cmake-build-debug"
+CMake Deprecation Warning:
+  Support for "Extra Generators" like
+
+    CodeBlocks
+
+  is deprecated and will be removed from a future version of CMake.  IDEs may
+  use the cmake-file-api(7) to view CMake-generated project build trees.
+
+
 -- The C compiler identification is GNU 13.1.0
 -- The CXX compiler identification is GNU 13.1.0
 -- Detecting C compiler ABI info
@@ -13,4 +22,4 @@ C:\Users\miql\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMA
 -- Detecting CXX compile features - done
 -- Configuring done (4.0s)
 -- Generating done (0.0s)
--- Build files have been written to: C:/Users/miql/Desktop/Lab2/cmake-build-debug
+-- Build files have been written to: D:/Studia/ISA/SEMESTR 6/KZI/Lab2/cmake-build-debug
