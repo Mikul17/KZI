@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = 
 
-CXX_FLAGS = -g -fdiagnostics-color=always
+CXX_FLAGS =  -O3  -g -fdiagnostics-color=always
 

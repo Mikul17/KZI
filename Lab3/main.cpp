@@ -1,6 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
+#include <chrono>
 
 using namespace std;
 
@@ -10,10 +14,9 @@ struct Zadanie{
     vector<int>zadania;
 };
 
+
 void wczytajDane(const string& dane, vector<Zadanie>& zadania){
-    //ifstream f("neh.data.txt");
-    //ifstream f("D:\\Studia\\ISA\\SEMESTR 6\\KZI\\Lab3\\neh.data.txt");
-    ifstream f("/Users/miql/Desktop/KZI/Lab3/neh.data.txt");
+    ifstream f("../neh.data.txt");
     string tmp;
     int ilosc_zadan;
     int ilosc_maszyn;
@@ -40,92 +43,107 @@ void wczytajDane(const string& dane, vector<Zadanie>& zadania){
     }
 }
 
-void wyswietlDane(vector<Zadanie>& zadania){
-    for(Zadanie zad : zadania){
-        for(int z : zad.zadania){
-            cout<<z<<" ";
-        }
-        cout<<" | w: "<<zad.waga<<" |"<<endl;
-    }
-}
-
-int obliczCmaxKolejnosc(const vector<Zadanie>& zadania, const vector<int>& kolejnosc) {
+int obliczCmax(const vector<Zadanie>& zadania) {
     int liczbaMaszyn = zadania.front().zadania.size();
     vector<int> czasyZakonczeniaMaszyn(liczbaMaszyn, 0);
 
-    for (int idx : kolejnosc) {
-        vector<int> noweCzasyZakonczeniaMaszyn(liczbaMaszyn, 0);
+    for (const Zadanie& zad : zadania) {
         for (int m = 0; m < liczbaMaszyn; m++) {
-            int czasZakonczeniaPoprzedniegoZadania = (m == 0) ? 0 : noweCzasyZakonczeniaMaszyn[m - 1];
+            int czasZakonczeniaPoprzedniegoZadania = (m == 0) ? 0 : czasyZakonczeniaMaszyn[m - 1];
             int czasZakonczeniaNaPoprzedniejMaszynie = czasyZakonczeniaMaszyn[m];
-            noweCzasyZakonczeniaMaszyn[m] = max(czasZakonczeniaPoprzedniegoZadania, czasZakonczeniaNaPoprzedniejMaszynie) + zadania[idx].zadania[m];
+            czasyZakonczeniaMaszyn[m] = max(czasZakonczeniaPoprzedniegoZadania, czasZakonczeniaNaPoprzedniejMaszynie) + zad.zadania[m];
         }
-        czasyZakonczeniaMaszyn = noweCzasyZakonczeniaMaszyn;
     }
 
     return czasyZakonczeniaMaszyn.back();
 }
 
-int obliczCmax(const vector<Zadanie>& zadania){
-    int liczbaMaszyn = zadania.front().zadania.size();
-    vector<int> czasyZakonczeniaMaszyn(liczbaMaszyn, 0);
-    for(Zadanie zad : zadania){
-        vector<int> noweCzasyZakonczeniaMaszyn(liczbaMaszyn, 0);
-        for (int m = 0; m < liczbaMaszyn; m++) {
-            int czasZakonczeniaPoprzedniegoZadania = (m == 0) ? 0 : noweCzasyZakonczeniaMaszyn[m - 1];
-            int czasZakonczeniaNaPoprzedniejMaszynie = czasyZakonczeniaMaszyn[m];
-            noweCzasyZakonczeniaMaszyn[m] = max(czasZakonczeniaPoprzedniegoZadania, czasZakonczeniaNaPoprzedniejMaszynie) + zad.zadania[m];
-        }
-        czasyZakonczeniaMaszyn = noweCzasyZakonczeniaMaszyn;
-    }
-    return  czasyZakonczeniaMaszyn.back();
-}
-
-vector<int> indeksy(const vector<Zadanie>& zadania){
-    vector<int> kol;
-    for(const auto & i : zadania){
-        kol.push_back(i.index);
-    }
-    return kol;
-}
-
-int neh(const vector<Zadanie>& dane){
+int neh(const vector<Zadanie>& dane) {
     vector<Zadanie> posortowane = dane;
-    std::sort(posortowane.begin(), posortowane.end(), [](const Zadanie& a, const Zadanie& b){
+    sort(posortowane.begin(), posortowane.end(), [](const Zadanie& a, const Zadanie& b) {
+        if (a.waga == b.waga) {
+            return a.index < b.index;
+        }
         return a.waga > b.waga;
-    } );
-    vector<int> najlepszaKolejnosc;
-    vector<Zadanie> aktualna;
-    int bestCmax=INT_MAX;
-    for(Zadanie zad : posortowane){
-        aktualna.push_back(zad);
-        bestCmax = obliczCmax(aktualna);
-       for(int j=aktualna.size()-1; j>0 ; j--){
-           if(j!=1){
-               swap(aktualna[j],aktualna[j-1]);
-           }
-           vector<int> indxy = indeksy(aktualna);
-           int currCmax = obliczCmax(aktualna);
-           if( bestCmax > currCmax){
-               bestCmax = currCmax;
-           }
-       }
+    });
+
+    vector<Zadanie> najlepszaKolejnosc;
+    int bestCmax = INT_MAX;
+
+    for (const Zadanie& zad : posortowane) {
+        int najlepszeMiejsce = -1;
+        int aktualnyNajlepszyCmax = INT_MAX;
+
+        for (size_t i = 0; i <= najlepszaKolejnosc.size(); i++) {
+            najlepszaKolejnosc.insert(najlepszaKolejnosc.begin() + i, zad);
+            int tempCmax = obliczCmax(najlepszaKolejnosc);
+
+            if (tempCmax < aktualnyNajlepszyCmax) {
+                aktualnyNajlepszyCmax = tempCmax;
+                najlepszeMiejsce = i;
+            }
+
+            najlepszaKolejnosc.erase(najlepszaKolejnosc.begin() + i);
+        }
+
+
+        najlepszaKolejnosc.insert(najlepszaKolejnosc.begin() + najlepszeMiejsce, zad);
+        bestCmax = aktualnyNajlepszyCmax;
     }
-    cout<<endl;
-    wyswietlDane(aktualna);
+
     return bestCmax;
 }
 
+void wyciagnijDane(){
+    ifstream input("../neh.data.txt");
+    ofstream output("../odpowiedzi.txt");
 
-int main() {
+    string line;
+    string data;
+    string cmax;
+    bool neh = false;
+
+    while(getline(input, line)){
+        if(line.find("data.") != string::npos){
+            data = line.substr(0, line.find(':'));
+            neh = false;
+        } else if(line.find("neh:") != string::npos){
+            neh = true;
+        } else if(neh){
+            cmax = line.substr(line.find(':')+1);
+            output << data << ": | NEH: " << cmax << '\n';
+            neh = false;
+        }
+    }
+}
+
+int main(){
     vector<Zadanie> zadania;
-    //string dane = "data.000:";
-    //wersja MacOS
-    string dane = "data.000:\r";
-    wczytajDane(dane,zadania);
-    wyswietlDane(zadania);
-    cout <<"Z kol: " <<obliczCmaxKolejnosc(zadania, {0, 1, 2, 3}) << endl;
-    cout <<"Bez kol: " <<obliczCmax(zadania)<<endl;
-    cout<< "NEH: "<<neh(zadania)<<endl;
+    wyciagnijDane();
+    ifstream f("../odpowiedzi.txt");
+    chrono::milliseconds czas(0);
+
+    for(int i=0; i<= 120; i++){
+        stringstream ss;
+        ss << "data.";
+        ss << setw(3) << setfill('0') << i;
+        string fileName = ss.str()+":";
+
+        wczytajDane(fileName, zadania);
+
+        auto start = chrono::high_resolution_clock::now();
+        auto Cmax = neh(zadania);
+        auto stop = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
+        czas += duration;
+
+        string line;
+        getline(f, line);
+        string cmax = line.substr(line.find("NEH: ")+5);
+        cout<<fileName<<" | NEH: "<<Cmax<<" | Oczekiwane: "<<cmax<<" | Czas: "<<duration.count()<<"ms"<<endl;
+
+        zadania.clear();
+    }
+    cout<<"Czas wykonania: "<<czas.count()<<"s"<<endl;
     return 0;
 }
