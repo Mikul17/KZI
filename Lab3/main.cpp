@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <valarray>
 
 using namespace std;
 
@@ -118,86 +119,82 @@ void wyciagnijDane(){
 }
 
 void zamiana(vector<Zadanie>& zadania){
-    int zakres = (zadania.size() - 1) -1  + 1;
-    int indexZamiany = rand()%zakres + 1;
+    int zakres = zadania.size();
+    int indexPierwszy = rand() % zakres;
+    int indexDrugi = rand() % zakres;
 
-    swap(zadania.at(0), zadania.at(indexZamiany));
+
+    swap(zadania.at(indexPierwszy), zadania.at(indexDrugi));
 }
 
 int symulowaneWyzarzanie(vector<Zadanie>& zadania){
     int Cmax = obliczCmax(zadania);
     int noweCmax = INT_MAX;
     vector<Zadanie> kopia = zadania;
-    double T = 90;
+    double T = 100;
     ofstream f("../wyzarzanie.csv");
-    for(int i=0; i< 10000; i++){
+    for(int i=0; i< 100000; i++){
         zamiana(kopia);
         noweCmax = obliczCmax(kopia);
         int diff = noweCmax-Cmax;
         double warunek = exp(-diff/T);
-        if(noweCmax<Cmax || ((double)rand()/RAND_MAX)<warunek){
+        double r = static_cast<double>(rand()) / RAND_MAX;
+        if(noweCmax<Cmax || r<warunek){
             Cmax = noweCmax;
             zadania=kopia;
-            f<<i<<";"<<noweCmax<<";"<<T<<";"<<endl;
+            f<<i<<";"<<noweCmax<<";"<<endl;
+        }else{
+            kopia=zadania;
         }
-        T=T*0.998;
+        T=T*0.955;
     }
     return Cmax;
 }
 
-//int main(){
-//    vector<Zadanie> zadania;
-//    wyciagnijDane();
-//    ifstream f("../odpowiedzi.txt");
-//    chrono::milliseconds czas(0);
-//
-//    for(int i=0; i<= 20; i++){
-//        stringstream ss;
-//        ss << "data.";
-//        ss << setw(3) << setfill('0') << i;
-//        string fileName = ss.str()+":\r";
-//
-//        wczytajDane(fileName, zadania);
-//
-//        auto start = chrono::high_resolution_clock::now();
-//        auto Cmax = neh(zadania);
-//        auto stop = chrono::high_resolution_clock::now();
-//        auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
-//        czas += duration;
-//
-//        string line;
-//        getline(f, line);
-//        string cmax = line.substr(line.find("NEH: ")+5);
-//        cout<<fileName.substr(0, fileName.size()-2)<<" | NEH: "<<Cmax<<" | Oczekiwane: "<<cmax;
-////        cout<<fileName<<" | NEH: "<<Cmax<<" | Oczekiwane: "<<cmax<<" | Czas: "<<duration.count()<<"ms"<<endl;
-//
-//        zadania.clear();
-//    }
-//    cout<<"Czas wykonania: "<<czas.count()<<"s"<<endl;
-//    return 0;
-//}
-
 int main(){
-    vector<Zadanie> zadania;
+    vector<Zadanie> zadaniaNeh;
+    vector<Zadanie> zadaniaWyzarzanie;
     wyciagnijDane();
     ifstream f("../odpowiedzi.txt");
-    for(int i=1; i<= 1; i++){
+    chrono::milliseconds czasNeh(0),czasWyz(0),czas(0);
+    for(int i=0; i< 121; i++){
         stringstream ss;
         ss << "data.";
         ss << setw(3) << setfill('0') << i;
-        string fileName = ss.str()+":\r";
+        string fileName = ss.str()+":";
 
-        wczytajDane(fileName, zadania);
+        wczytajDane(fileName, zadaniaNeh);
+        zadaniaWyzarzanie = zadaniaNeh;
+
+        auto start = chrono::high_resolution_clock::now();
+        auto Cmax = neh(zadaniaNeh);
+        auto stop = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
+        czasNeh += duration;
+        czas+=duration;
+
+        auto startWyz = chrono::high_resolution_clock::now();
+        auto CmaxWyzarzanie = symulowaneWyzarzanie(zadaniaWyzarzanie);
+        auto stopWyz = chrono::high_resolution_clock::now();
+        auto durationWyz = chrono::duration_cast<chrono::milliseconds>(stopWyz-startWyz);
+        czasWyz+=durationWyz;
+        czas+=durationWyz;
 
 
 
         string line;
         getline(f, line);
         string cmax = line.substr(line.find("NEH: ")+5);
-        auto Cmax = symulowaneWyzarzanie(zadania);
-        cout<<fileName.substr(0, fileName.size()-2)<<" | Wyzarzanie: "<<Cmax<<" | Oczekiwane: "<<cmax;
-//        cout<<fileName<<" | NEH: "<<Cmax<<" | Oczekiwane: "<<cmax<<" | Czas: "<<duration.count()<<"ms"<<endl;
 
-        zadania.clear();
+
+        cout<<fileName<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
+        <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
+
+        zadaniaNeh.clear();
+        zadaniaWyzarzanie.clear();
     }
+    cout<<"Czas wykonania Neh: "<<chrono::duration_cast<chrono::seconds>(czasNeh).count() <<" s"<<endl;
+    cout<<"Czas wykonania Wyzarzanie: "<<chrono::duration_cast<chrono::seconds>(czasWyz).count()<<" s"<<endl;
+    cout<<"Czas wykonania: "<<chrono::duration_cast<chrono::seconds>(czas).count()<<" s"<<endl;
+    return 0;
 }
