@@ -132,7 +132,6 @@ int symulowaneWyzarzanie(vector<Zadanie>& zadania){
     int noweCmax = INT_MAX;
     vector<Zadanie> kopia = zadania;
     double T = 100;
-    ofstream f("../wyzarzanie.csv");
     for(int i=0; i< 100000; i++){
         zamiana(kopia);
         noweCmax = obliczCmax(kopia);
@@ -142,7 +141,6 @@ int symulowaneWyzarzanie(vector<Zadanie>& zadania){
         if(noweCmax<Cmax || r<warunek){
             Cmax = noweCmax;
             zadania=kopia;
-            f<<i<<";"<<noweCmax<<";"<<endl;
         }else{
             kopia=zadania;
         }
