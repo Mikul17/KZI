@@ -1,3 +1,0 @@
-C:\Users\miql\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -E rm -f CMakeFiles\Lab2.dir/objects.a
-C:\Users\miql\AppData\Local\Programs\CLion\bin\mingw\bin\ar.exe qc CMakeFiles\Lab2.dir/objects.a @CMakeFiles\Lab2.dir\objects1.rsp
-C:\Users\miql\AppData\Local\Programs\CLion\bin\mingw\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\Lab2.dir/objects.a -Wl,--no-whole-archive -o Lab2.exe -Wl,--out-implib,libLab2.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Lab2.dir\linkLibs.rsp
