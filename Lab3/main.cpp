@@ -132,19 +132,31 @@ int symulowaneWyzarzanie(vector<Zadanie>& zadania){
     int noweCmax = INT_MAX;
     vector<Zadanie> kopia = zadania;
     double T = 100;
+    ofstream f ("../wyzarzanie.csv");
+    f<<"Operacja;Cmax;T;"<<endl;
     for(int i=0; i< 100000; i++){
         zamiana(kopia);
         noweCmax = obliczCmax(kopia);
         int diff = noweCmax-Cmax;
         double warunek = exp(-diff/T);
         double r = static_cast<double>(rand()) / RAND_MAX;
+        if(i%100==0){
+            f<<i<<";"<<Cmax<<";"<<T<<endl;
+        }
         if(noweCmax<Cmax || r<warunek){
             Cmax = noweCmax;
             zadania=kopia;
         }else{
             kopia=zadania;
         }
-        T=T*0.955;
+
+        /*Zmiana wartosci T tylko cztery razy
+        if(i%25000==0){
+            T=T*0.175;
+        }
+         */
+
+        T=T*0.99995;
     }
     return Cmax;
 }
@@ -155,11 +167,14 @@ int main(){
     wyciagnijDane();
     ifstream f("../odpowiedzi.txt");
     chrono::milliseconds czasNeh(0),czasWyz(0),czas(0);
-    for(int i=0; i< 121; i++){
+    for(int i=0; i<= 120; i++){
         stringstream ss;
         ss << "data.";
         ss << setw(3) << setfill('0') << i;
-        string fileName = ss.str()+":";
+        //Windows
+        //string fileName = ss.str()+":";
+        //MacOS
+        string fileName = ss.str()+":\r";
 
         wczytajDane(fileName, zadaniaNeh);
         zadaniaWyzarzanie = zadaniaNeh;
@@ -184,8 +199,11 @@ int main(){
         getline(f, line);
         string cmax = line.substr(line.find("NEH: ")+5);
 
-
-        cout<<fileName<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
+        //Windows
+//        cout<<fileName<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
+//            <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
+        //MacOS
+        cout<<fileName.substr(0,fileName.length()-2)<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax.substr(0,cmax.length()-1)<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
         <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
 
         zadaniaNeh.clear();
