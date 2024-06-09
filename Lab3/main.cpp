@@ -6,15 +6,17 @@
 #include <iomanip>
 #include <chrono>
 #include <valarray>
+#include <cmath>
 
 using namespace std;
+
+vector<pair<int,int>> tabu;
 
 struct Zadanie{
     int index;
     int waga;
     vector<int>zadania;
 };
-
 
 void wczytajDane(const string& dane, vector<Zadanie>& zadania){
     ifstream f("../neh.data.txt");
@@ -161,13 +163,130 @@ int symulowaneWyzarzanie(vector<Zadanie>& zadania){
     return Cmax;
 }
 
+bool isTabu(pair<int, int> move){
+    for(auto & t : tabu){
+        if((t.first == move.first && t.second == move.second) ||
+           (t.first == move.second && t.second == move.first)){
+            return true;
+        }
+    }
+    return false;
+}
+
+void addMoveToTabu(pair<int, int> move){
+    if(tabu.size() >= 40){
+        tabu.erase(tabu.begin());
+    }
+    tabu.push_back(move);
+}
+
+pair<pair<int, int>, int> findBestTabu(vector<Zadanie>& zadania){
+    int bestA = -1;
+    int bestB = -1;
+    int bestCmax = INT_MAX;
+    for(int i = 0; i < zadania.size() - 1; i++){
+        for(int j = i + 1; j < zadania.size(); j++){
+            swap(zadania[i], zadania[j]);
+            int accCmax = obliczCmax(zadania);
+            if(accCmax < bestCmax && !isTabu({i, j})){
+                bestCmax = accCmax;
+                bestA = i;
+                bestB = j;
+            }
+            swap(zadania[i], zadania[j]);
+        }
+    }
+    return make_pair(make_pair(bestA, bestB), bestCmax);
+}
+
+int tabuSearch(vector<Zadanie>& zadania){
+    int bestCmax = obliczCmax(zadania);
+    vector<Zadanie> bestZadania = zadania;
+
+    for(int i = 0; i < 500; i++){
+        pair<pair<int, int>, int> result = findBestTabu(zadania);
+        pair<int, int> move = result.first;
+        int currBest = result.second;
+
+        if(move.first == -1 || move.second == -1){
+            tabu.pop_back();
+        }
+
+        swap(zadania[move.first], zadania[move.second]);
+        addMoveToTabu(move);
+
+        if(currBest < bestCmax){
+            bestCmax = currBest;
+            bestZadania = zadania;
+        }
+    }
+
+    zadania = bestZadania;
+    tabu.clear();
+    return bestCmax;
+}
+//int main(){
+//    vector<Zadanie> zadaniaNeh;
+//    vector<Zadanie> zadaniaWyzarzanie;
+//    wyciagnijDane();
+//    ifstream f("../odpowiedzi.txt");
+//    chrono::milliseconds czasNeh(0),czasWyz(0),czas(0);
+//    for(int i=0; i<= 120; i++){
+//        stringstream ss;
+//        ss << "data.";
+//        ss << setw(3) << setfill('0') << i;
+//        //Windows
+//        //string fileName = ss.str()+":";
+//        //MacOS
+//        string fileName = ss.str()+":\r";
+//
+//        wczytajDane(fileName, zadaniaNeh);
+//        zadaniaWyzarzanie = zadaniaNeh;
+//
+//        auto start = chrono::high_resolution_clock::now();
+//        auto Cmax = neh(zadaniaNeh);
+//        auto stop = chrono::high_resolution_clock::now();
+//        auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
+//        czasNeh += duration;
+//        czas+=duration;
+//
+//        auto startWyz = chrono::high_resolution_clock::now();
+//        auto CmaxWyzarzanie = symulowaneWyzarzanie(zadaniaWyzarzanie);
+//        auto stopWyz = chrono::high_resolution_clock::now();
+//        auto durationWyz = chrono::duration_cast<chrono::milliseconds>(stopWyz-startWyz);
+//        czasWyz+=durationWyz;
+//        czas+=durationWyz;
+//
+//
+//
+//        string line;
+//        getline(f, line);
+//        string cmax = line.substr(line.find("NEH: ")+5);
+//
+//        //Windows
+////        cout<<fileName<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
+////            <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
+//        //MacOS
+//        cout<<fileName.substr(0,fileName.length()-2)<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax.substr(0,cmax.length()-1)<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
+//        <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
+//
+//        zadaniaNeh.clear();
+//        zadaniaWyzarzanie.clear();
+//    }
+//    cout<<"Czas wykonania Neh: "<<chrono::duration_cast<chrono::seconds>(czasNeh).count() <<" s"<<endl;
+//    cout<<"Czas wykonania Wyzarzanie: "<<chrono::duration_cast<chrono::seconds>(czasWyz).count()<<" s"<<endl;
+//    cout<<"Czas wykonania: "<<chrono::duration_cast<chrono::seconds>(czas).count()<<" s"<<endl;
+//    return 0;
+//}
+
 int main(){
     vector<Zadanie> zadaniaNeh;
     vector<Zadanie> zadaniaWyzarzanie;
+    vector<Zadanie> zadaniaTabu;
     wyciagnijDane();
     ifstream f("../odpowiedzi.txt");
-    chrono::milliseconds czasNeh(0),czasWyz(0),czas(0);
-    for(int i=0; i<= 120; i++){
+    chrono::milliseconds czasTabu(0),czasWyz(0),czas(0);
+    for(int i=100; i<101; i++){
         stringstream ss;
         ss << "data.";
         ss << setw(3) << setfill('0') << i;
@@ -178,20 +297,31 @@ int main(){
 
         wczytajDane(fileName, zadaniaNeh);
         zadaniaWyzarzanie = zadaniaNeh;
+        zadaniaTabu = zadaniaNeh;
+
+//        auto start = chrono::high_resolution_clock::now();
+//        auto CmaxWyzAutomat = tabuSearch(zadaniaTabu);
+//        auto stop = chrono::high_resolution_clock::now();
+//        auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
+//        czasTabu += duration;
+//        czas+=duration;
+
+
 
         auto start = chrono::high_resolution_clock::now();
-        auto Cmax = neh(zadaniaNeh);
+        auto CmaxWyzAutomat = symulowaneWyzarzanieAutomat(zadaniaTabu);
         auto stop = chrono::high_resolution_clock::now();
         auto duration = chrono::duration_cast<chrono::milliseconds>(stop-start);
-        czasNeh += duration;
+        czasTabu += duration;
         czas+=duration;
+
 
         auto startWyz = chrono::high_resolution_clock::now();
         auto CmaxWyzarzanie = symulowaneWyzarzanie(zadaniaWyzarzanie);
         auto stopWyz = chrono::high_resolution_clock::now();
         auto durationWyz = chrono::duration_cast<chrono::milliseconds>(stopWyz-startWyz);
         czasWyz+=durationWyz;
-        czas+=durationWyz;
+        czas+=duration;
 
 
 
@@ -203,14 +333,16 @@ int main(){
 //        cout<<fileName<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
 //            <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
         //MacOS
-        cout<<fileName.substr(0,fileName.length()-2)<<" | Neh: "<<Cmax<<" | Wyz: "<<CmaxWyzarzanie<<" | Oczekiwane: "<<cmax.substr(0,cmax.length()-1)<<" | Diff Wyz: "<<(CmaxWyzarzanie- stoi(cmax))
-        <<" | Czas trwania Neh: "<<duration.count()<<" ms"<< " |  Wyz: "<<durationWyz.count()<<" ms"<<endl;
+        cout << fileName.substr(0,fileName.length()-2) << " | Automat: " << CmaxWyzAutomat << " | Wyz: " << CmaxWyzarzanie << " | Oczekiwane: "
+             << cmax.substr(0,cmax.length()-1) << " | DIFF: " << CmaxWyzarzanie - CmaxWyzAutomat << " | T tabu: " << duration.count() << " | T automat: " << durationWyz.count() << endl;
 
         zadaniaNeh.clear();
         zadaniaWyzarzanie.clear();
+        zadaniaTabu.clear();
     }
-    cout<<"Czas wykonania Neh: "<<chrono::duration_cast<chrono::seconds>(czasNeh).count() <<" s"<<endl;
     cout<<"Czas wykonania Wyzarzanie: "<<chrono::duration_cast<chrono::seconds>(czasWyz).count()<<" s"<<endl;
     cout<<"Czas wykonania: "<<chrono::duration_cast<chrono::seconds>(czas).count()<<" s"<<endl;
     return 0;
 }
+
+
